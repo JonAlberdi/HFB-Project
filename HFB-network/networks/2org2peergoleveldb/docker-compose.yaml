@@ -1,0 +1,273 @@
+version: "3"
+
+volumes:
+  prometheus_data: {}
+  grafana_storage: {}
+
+services:
+  orderer.example.com: # There can be multiple orderers
+    container_name: orderer.example.com
+    image: hyperledger/fabric-orderer:${FABRIC_VERSION}
+    hostname: orderer.example.com
+    environment:
+      - ORDERER_GENERAL_LOGLEVEL=DEBUG
+      - ORDERER_GENERAL_LISTENADDRESS=0.0.0.0
+      - ORDERER_GENERAL_GENESISMETHOD=file
+      - ORDERER_GENERAL_GENESISFILE=/var/hyperledger/orderer/orderer.genesis.block
+      - ORDERER_GENERAL_LOCALMSPID=OrdererMSP
+      - ORDERER_GENERAL_LOCALMSPDIR=/var/hyperledger/orderer/msp
+      - ORDERER_GENERAL_LEDGERTYPE=file
+      - ORDERER_GENERAL_BATCHTIMEOUT=2s
+      - ORDERER_GENERAL_MAXMESSAGECOUNT=10
+      - ORDERER_GENERAL_MAXWINDOWSIZE=1000
+      - ORDERER_GENERAL_LISTENPORT=7050
+      - ORDERER_OPERATIONS_LISTENADDRESS=0.0.0.0:9441
+      - ORDERER_METRICS_PROVIDER=prometheus
+      #- ORDERER_RAMLEDGER_HISTORY_SIZE=100  #only useful when use ram ledger
+      # enabled TLS
+      - ORDERER_GENERAL_TLS_ENABLED=true
+      - ORDERER_GENERAL_TLS_PRIVATEKEY=/var/hyperledger/orderer/tls/server.key
+      - ORDERER_GENERAL_TLS_CERTIFICATE=/var/hyperledger/orderer/tls/server.crt
+      - ORDERER_GENERAL_TLS_ROOTCAS=[/var/hyperledger/orderer/tls/ca.crt]
+    ports:
+      - "7050:7050"
+      - 9441:9441
+    volumes:
+      - ./../../crypto-material/config_solo_e2e/channel-artifacts/orderer.genesis.block:/var/hyperledger/orderer/orderer.genesis.block
+      - ./../../crypto-material/config_solo_e2e/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/msp:/var/hyperledger/orderer/msp
+      - ./../../crypto-material/config_solo_e2e/crypto-config/ordererOrganizations/example.com/orderers/orderer.example.com/tls/:/var/hyperledger/orderer/tls
+    command: orderer start
+
+  peer0.org1.example.com:
+    container_name: peer0.org1.example.com
+    image: hyperledger/fabric-peer:${FABRIC_VERSION}
+    hostname: peer0.org1.example.com
+    environment:
+      - CORE_PEER_ID=peer0.org1.example.com
+      - CORE_PEER_ADDRESS=peer0.org1.example.com:7051
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.org1.example.com:7052
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org1.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:1.4.6
+      - GODEBUG=netdns=go+1
+      - FABRIC_LOGGING_SPEC=debug
+      #- CORE_PEER_ID=peer0
+      - CORE_PEER_ADDRESSAUTODETECT=false
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=2org2peergoleveldb_default # uncomment this to use specific network
+      #- CORE_PEER_NETWORKID=dev
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false # this node is the group leader, default to false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_ENABLED=true
+      # passing the following option to true will trigger a SSLV3_ALERT_BAD_CERTIFICATE
+      # if you do not specify clientCert and clientKey in network.json for the peer making the query
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.org1.example.com:9442
+      - CORE_METRICS_PROVIDER=prometheus
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org1.example.com/peers/peer0.org1.example.com/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 7051:7051
+      - 7052:7052
+      - 7053:7053
+      - 9442:9442
+    command: peer node start
+
+  peer1.org1.example.com:
+    container_name: peer1.org1.example.com
+    image: hyperledger/fabric-peer:${FABRIC_VERSION}
+    hostname: peer1.org1.example.com
+    environment:
+      - CORE_PEER_ID=peer1.org1.example.com
+      - CORE_PEER_ADDRESS=peer1.org1.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org1.example.com:7051
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.org1.example.com:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org1.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org1MSP
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:1.4.6
+      - GODEBUG=netdns=go+1
+      - FABRIC_LOGGING_SPEC=debug
+      #- CORE_PEER_ID=peer0
+      - CORE_PEER_ADDRESSAUTODETECT=false
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=2org2peergoleveldb_default # uncomment this to use specific network
+      #- CORE_PEER_NETWORKID=dev
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false # this node is the group leader, default to false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_ENABLED=true
+      # passing the following option to true will trigger a SSLV3_ALERT_BAD_CERTIFICATE
+      # if you do not specify clientCert and clientKey in network.json for the peer making the query
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.org1.example.com:9443
+      - CORE_METRICS_PROVIDER=prometheus
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org1.example.com/peers/peer1.org1.example.com/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 8051:7051
+      - 8052:7052
+      - 8053:7053
+      - 9443:9443
+    command: peer node start
+
+  peer0.org2.example.com:
+    container_name: peer0.org2.example.com
+    image: hyperledger/fabric-peer:${FABRIC_VERSION}
+    hostname: peer0.org2.example.com
+    environment:
+      - CORE_PEER_ID=peer0.org2.example.com
+      - CORE_PEER_ADDRESS=peer0.org2.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer0.org2.example.com:7051
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer0.org2.example.com:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer0.org2.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:1.4.6
+      - GODEBUG=netdns=go+1
+      - FABRIC_LOGGING_SPEC=debug
+      #- CORE_PEER_ID=peer0
+      - CORE_PEER_ADDRESSAUTODETECT=false
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=2org2peergoleveldb_default # uncomment this to use specific network
+      #- CORE_PEER_NETWORKID=dev
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false # this node is the group leader, default to false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_ENABLED=true
+      # passing the following option to true will trigger a SSLV3_ALERT_BAD_CERTIFICATE
+      # if you do not specify clientCert and clientKey in network.json for the peer making the query
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_OPERATIONS_LISTENADDRESS=peer0.org2.example.com:9444
+      - CORE_METRICS_PROVIDER=prometheus
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org2.example.com/peers/peer0.org2.example.com/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 9051:7051
+      - 9052:7052
+      - 9053:7053
+      - 9444:9444
+    command: peer node start
+
+  peer1.org2.example.com:
+    container_name: peer1.org2.example.com
+    image: hyperledger/fabric-peer:${FABRIC_VERSION}
+    hostname: peer1.org2.example.com
+    environment:
+      - CORE_PEER_ID=peer1.org2.example.com
+      - CORE_PEER_ADDRESS=peer1.org2.example.com:7051
+      - CORE_PEER_GOSSIP_EXTERNALENDPOINT=peer1.org2.example.com:7051
+      - CORE_PEER_CHAINCODELISTENADDRESS=peer1.org2.example.com:7052
+      - CORE_PEER_GOSSIP_BOOTSTRAP=peer1.org2.example.com:7051
+      - CORE_PEER_LOCALMSPID=Org2MSP
+      - CORE_CHAINCODE_BUILDER=hyperledger/fabric-ccenv:1.4.6
+      - GODEBUG=netdns=go+1
+      - FABRIC_LOGGING_SPEC=debug
+      #- CORE_PEER_ID=peer0
+      - CORE_PEER_ADDRESSAUTODETECT=false
+      - CORE_LOGGING_LEVEL=DEBUG
+      - CORE_VM_DOCKER_HOSTCONFIG_NETWORKMODE=2org2peergoleveldb_default # uncomment this to use specific network
+      #- CORE_PEER_NETWORKID=dev
+      - CORE_PEER_GOSSIP_USELEADERELECTION=true
+      - CORE_PEER_GOSSIP_ORGLEADER=false # this node is the group leader, default to false
+      - CORE_PEER_PROFILE_ENABLED=false
+      - CORE_PEER_TLS_ENABLED=true
+      # passing the following option to true will trigger a SSLV3_ALERT_BAD_CERTIFICATE
+      # if you do not specify clientCert and clientKey in network.json for the peer making the query
+      - CORE_PEER_TLS_CLIENTAUTHREQUIRED=false
+      - CORE_PEER_TLS_CERT_FILE=/etc/hyperledger/fabric/tls/server.crt
+      - CORE_PEER_TLS_KEY_FILE=/etc/hyperledger/fabric/tls/server.key
+      - CORE_PEER_TLS_ROOTCERT_FILE=/etc/hyperledger/fabric/tls/ca.crt
+      - CORE_OPERATIONS_LISTENADDRESS=peer1.org2.example.com:9445
+      - CORE_METRICS_PROVIDER=prometheus
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/msp:/etc/hyperledger/fabric/msp
+      - ./../../crypto-material/config_solo_e2e/crypto-config/peerOrganizations/org2.example.com/peers/peer1.org2.example.com/tls:/etc/hyperledger/fabric/tls
+    ports:
+      - 10051:7051
+      - 10052:7052
+      - 10053:7053
+      - 9445:9445
+    command: peer node start
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    volumes:
+      - ./prometheus/prometheus-fabric.yml:/etc/prometheus/prometheus.yml
+      - prometheus_data:/prometheus
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    ports:
+      - "9090:9090"
+
+  pushGateway:
+    image: prom/pushgateway
+    container_name: pushGateway
+    ports:
+      - "9091:9091"
+
+  grafana:
+    image: grafana/grafana
+    container_name: grafana
+    user: "104"
+    depends_on:
+      - prometheus
+    ports:
+      - 3000:3000
+    volumes:
+      - grafana_storage:/var/lib/grafana
+      - ./grafana/provisioning/:/etc/grafana/provisioning/
+    env_file:
+      - ./grafana/config.monitoring
+    restart: always
+
+  cadvisor:
+    image: google/cadvisor:v0.27.4
+    privileged: true
+    container_name: cadvisor
+    volumes:
+      - /var/run:/var/run:rw
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+      # - /cgroup:/cgroup:ro
+    ports:
+      - 8080:8080
+    restart: always
+
+  admin:
+    image: a904871/hlfmodbus:Admin
+    container_name: admin
+    depends_on: 
+      - orderer.example.com
+      - peer0.org1.example.com
+      - peer0.org2.example.com
+      - peer1.org1.example.com
+      - peer1.org2.example.com
+    
+    volumes:
+      - ../../app:/etc/HFBapp
+      - ../../connection-profile:/etc/connection-profile
+      - ../../crypto-material:/etc/crypto-material
+      - ../../chaincode:/etc/chaincode
+    
+    ports:
+      - 6020:6020

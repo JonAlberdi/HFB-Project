@@ -1,0 +1,40 @@
+version: "3"
+
+volumes:
+  prometheus_data: {}
+  grafana_storage: {}
+
+services:
+  modbusClient:
+    image: a904871/hlfmodbus:ClienteSyncTest
+    container_name: cliente_pymodbus
+    environment: 
+      #- IP_CLIENT=10.62.29.13
+      - IP_CLIENT=192.168.1.40
+    depends_on: 
+      - modbusServer
+    volumes:
+      - ../../app:/etc/HFBapp
+      - ../../connection-profile:/etc/connection-profile
+      - ../../crypto-material:/etc/crypto-material
+      - ../../chaincode:/etc/chaincode
+      
+    ports: 
+      - 5021:5021
+    
+
+      
+  modbusServer:
+    image: a904871/hlfmodbus:ServSyncTest
+    container_name: server_pymodbus
+    environment: 
+      #- IP_CLIENT=10.62.29.13
+      - IP_CLIENT=192.168.1.40
+    volumes:
+      - ../../app:/etc/HFBapp
+      - ../../connection-profile:/etc/connection-profile
+      - ../../crypto-material:/etc/crypto-material
+      - ../../chaincode:/etc/chaincode
+    
+    ports: 
+      - 5020:5020
