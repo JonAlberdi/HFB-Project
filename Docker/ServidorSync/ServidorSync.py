@@ -143,16 +143,18 @@ def run_server():
     
     #framer = kwargs.pop("framer", ModbusSocketFramer)
      
-    server = ModbusTcpServer(context, identity, address=("", 5020))
+    server = ModbusTcpServer(context, identity, address=("172.23.0.2", 5020))
     custom_functions=[]
-    print(server.socket)
+
+    print(server.client)
+    print(server.socket.getsockname())
 
     for f in custom_functions:
         server.decoder.register(f)
 
     server.serve_forever()
 
-    server.shutdown()
+    #server.shutdown()
     print(server.socket)
 
 

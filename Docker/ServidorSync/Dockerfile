@@ -9,7 +9,7 @@ RUN pip3 install -U pymodbus[twisted]
 RUN git clone https://github.com/hyperledger/fabric-sdk-py.git && cd fabric-sdk-py && make install
 RUN cd ..
 
-ADD ServidorSync.py ServidorSync.py
+#ADD ServidorSync.py ServidorSync.py
 ADD execute.sh execute.sh
 
 CMD ["./execute.sh"]
