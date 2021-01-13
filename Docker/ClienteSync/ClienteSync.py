@@ -30,7 +30,7 @@ import hashlib
 import base64
 
 
-os.environ['IP_CLIENT']
+os.environ['IP_SERVER']
 # --------------------------------------------------------------------------- #
 # configure the client logging
 # --------------------------------------------------------------------------- #
@@ -81,7 +81,7 @@ def run_sync_client():
     #
     #    client = ModbusClient('localhost', retries=3, retry_on_empty=True)
     # ------------------------------------------------------------------------#
-    client = ModbusClient(os.getenv('IP_CLIENT'), port=5020)
+    client = ModbusClient(os.getenv('IP_SERVER'), port=5020)
     # from pymodbus.transaction import ModbusRtuFramer
     # client = ModbusClient('localhost', port=5020, framer=ModbusRtuFramer)
     # client = ModbusClient(method='binary', port='/dev/ptyp0', timeout=1)
@@ -105,7 +105,9 @@ def run_sync_client():
     response=QueryClient()
 
     
-    message= b"Server"
+    message=os.getenv('IP_SERVER')
+    message=message.encode("utf-8")
+
     message=base64.b64encode(hashlib.sha256(message).digest())
     message=message.decode("utf-8")
 

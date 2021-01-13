@@ -15,6 +15,8 @@ from pymodbus.server.sync import StartTlsServer
 from pymodbus.server.sync import StartUdpServer
 from pymodbus.server.sync import StartSerialServer
 from pymodbus.server.sync import ModbusTcpServer
+from pymodbus.server.sync import MyModbusTcpServer
+
 
 from pymodbus.device import ModbusDeviceIdentification
 from pymodbus.datastore import ModbusSequentialDataBlock, ModbusSparseDataBlock
@@ -29,7 +31,8 @@ import socket
 import hashlib
 import base64
 
-os.environ['IP_CLIENT']
+#os.environ['IP_CLIENT']
+
 # --------------------------------------------------------------------------- #
 # configure the service logging
 # --------------------------------------------------------------------------- #
@@ -39,6 +42,7 @@ FORMAT = ('%(asctime)-15s %(threadName)-15s'
 logging.basicConfig(format=FORMAT)
 log = logging.getLogger()
 log.setLevel(logging.DEBUG)
+_logger = logging.getLogger(__name__)
 
 from etc.HFBapp.queryv3Serv import QueryServer
 from etc.HFBapp.invokev3Serv import InvokeServer
@@ -139,23 +143,13 @@ def run_server():
     # ----------------------------------------------------------------------- #
     # Tcp:
     #StartTcpServer(context, identity=identity, address=("", 5020))
+    response=QueryServer()
+    _logger.debug("Query Server response %s" % response)
+     
+    StartTcpServer(context, identity=identity, address=("172.19.0.2", 5020), response=response['hash'])
 
     
-    #framer = kwargs.pop("framer", ModbusSocketFramer)
-     
-    server = ModbusTcpServer(context, identity, address=("172.23.0.2", 5020))
-    custom_functions=[]
-
-    print(server.client)
-    print(server.socket.getsockname())
-
-    for f in custom_functions:
-        server.decoder.register(f)
-
-    server.serve_forever()
-
-    #server.shutdown()
-    print(server.socket)
+    #print(server.socket)
 
 
     

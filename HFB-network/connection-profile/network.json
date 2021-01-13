@@ -71,7 +71,7 @@
   },
   "orderers": {
     "orderer.example.com": {
-      "url": "192.168.1.40:7050",
+      "url": "192.168.1.39:7050",
       "grpcOptions": {
         "grpc.ssl_target_name_override": "orderer.example.com",
         "grpc-max-send-message-length": 15
@@ -83,8 +83,8 @@
   },
   "peers": {
     "peer0.org1.example.com": {
-      "url": "192.168.1.40:7051",
-      "eventUrl": "192.168.1.40:7053",
+      "url": "192.168.1.39:7051",
+      "eventUrl": "192.168.1.39:7053",
       "grpcOptions": {
         "grpc.ssl_target_name_override": "peer0.org1.example.com",
         "grpc.http2.keepalive_time": 15
@@ -94,8 +94,8 @@
       }
     },
     "peer1.org1.example.com": {
-      "url": "192.168.1.40:8051",
-      "eventUrl": "192.168.1.40:8053",
+      "url": "192.168.1.39:8051",
+      "eventUrl": "192.168.1.39:8053",
       "grpcOptions": {
         "grpc.ssl_target_name_override": "peer1.org1.example.com"
       },
@@ -104,8 +104,8 @@
       }
     },
     "peer0.org2.example.com": {
-      "url": "192.168.1.40:9051",
-      "eventUrl": "192.168.1.40:9053",
+      "url": "192.168.1.39:9051",
+      "eventUrl": "192.168.1.39:9053",
       "grpcOptions": {
         "grpc.ssl_target_name_override": "peer0.org2.example.com",
         "grpc.http2.keepalive_time": 15
@@ -115,8 +115,8 @@
       }
     },
     "peer1.org2.example.com": {
-      "url": "192.168.1.40:10051",
-      "eventUrl": "192.168.1.40:10053",
+      "url": "192.168.1.39:10051",
+      "eventUrl": "192.168.1.39:10053",
       "grpcOptions": {
         "grpc.ssl_target_name_override": "peer1.org2.example.com"
       },
@@ -127,7 +127,7 @@
   },
   "certificateAuthorities": {
     "ca-org1": {
-      "url": "https://192.168.1.40:7054",
+      "url": "https://192.168.1.39:7054",
       "grpcOptions": {
         "verify": true
       },
@@ -142,7 +142,7 @@
       ]
     },
     "ca-org2": {
-      "url": "https://192.168.1.40:8054",
+      "url": "https://192.168.1.39:8054",
       "grpcOptions": {
         "verify": true
       },

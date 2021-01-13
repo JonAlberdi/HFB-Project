@@ -3,17 +3,19 @@ version: "3"
 volumes:
   prometheus_data: {}
   grafana_storage: {}
+  serversync: 
 
 services:
   modbusClient:
     image: a904871/hlfmodbus:ClienteSyncTest
     container_name: cliente_pymodbus
     environment: 
-      #- IP_CLIENT=10.62.29.13
-      - IP_CLIENT=192.168.1.40
+      - IP_SERVER=172.19.0.2
+      #- IP_SERVER=192.168.1.39
     depends_on: 
       - modbusServer
     volumes:
+      - ../../../Docker/ClienteSync/ClienteSync.py:/ClienteSync.py
       - ../../app:/etc/HFBapp
       - ../../connection-profile:/etc/connection-profile
       - ../../crypto-material:/etc/crypto-material
@@ -27,10 +29,9 @@ services:
   modbusServer:
     image: a904871/hlfmodbus:ServSyncTest
     container_name: server_pymodbus
-    environment: 
-      #- IP_CLIENT=10.62.29.13
-      - IP_CLIENT=192.168.1.40
     volumes:
+      - ../../../Docker/ServidorSync/ServidorSync.py:/ServidorSync.py
+      - ../../../Docker/ServidorSync/sinc.py:/usr/local/lib/python3.8/dist-packages/pymodbus/server/sync.py
       - ../../app:/etc/HFBapp
       - ../../connection-profile:/etc/connection-profile
       - ../../crypto-material:/etc/crypto-material
@@ -38,3 +39,5 @@ services:
     
     ports: 
       - 5020:5020
+
+

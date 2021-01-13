@@ -27,6 +27,7 @@ def InvokeClient():
 
     # Invoke a chaincode
     #args = ["client", "Qmeq4hW6k34a5dbpE2vc7FjSX1xmn1tphg2hGrHFGxqk16"]
+
     host_ip = socket.gethostbyname(socket.gethostname())
     name=host_ip.encode("utf-8")
     arg2=base64.b64encode(hashlib.sha256(name).digest())
